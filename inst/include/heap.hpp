@@ -42,7 +42,7 @@ using ul = std::string;
 template <template<typename...> class H, typename T, typename U>
 struct node
 {
-    typename H<node<T, U>>::handle_type handle;
+    H<typename node<T, U>>::handle_type handle;
     T key_;
     std::vector<U> value_;
     ul id_;
@@ -51,7 +51,7 @@ struct node
         key_(key), value_(value), id_(id)
     {}
 
-    bool operator<( const node<T, U>& rhs) const
+    bool operator<(const node<T, U>& rhs) const
     {
         return key_ > rhs.key_;
     }
@@ -81,7 +81,7 @@ public:
         }
     }
 
-    Rcpp::List handles(T from)
+    Rcpp::List handles(T& from)
     {
         std::map<ul, std::vector<U>> ret;
         if (key_to_id_.find(from) != key_to_id_.end())
@@ -99,7 +99,7 @@ public:
         return Rcpp::wrap(ret);
     }
 
-    void decrease_key(std::vector<T> from, std::vector<T> to, std::vector<ul> id)
+    void decrease_key(std::vector<T>& from, std::vector<T>& to, std::vector<ul>& id)
     {
         if (from.size() != to.size() || to.size() != id.size())
         {
@@ -149,7 +149,7 @@ public:
 
     Rcpp::List pop()
     {
-        fibonacci_node<T, U> n = heap_.top();
+        node<H, T, U> n = heap_.top();
         heap_.pop();
 
         std::map<T, std::vector<U>> heads;
@@ -162,7 +162,7 @@ public:
 
     Rcpp::List peek()
     {
-        fibonacci_node<T, U> n = heap_.top();
+        node<H, T, U> n = heap_.top();
 
         std::map< T, std::vector<U> > heads;
         heads.insert(std::pair< T, std::vector<U> >(n.key_, n.value_));
@@ -171,14 +171,14 @@ public:
     }
 
 private:
-    void decrease_key_(T to, T from, ul id)
+    void decrease_key_(T& to, T& from, ul& id)
     {
         drop_from_key_map_(from, id);
         decrease_(to, id);
         key_to_id_.insert(std::pair<T, ul>(to, id));
     }
 
-    void drop_from_key_map_(T from, ul id)
+    void drop_from_key_map_(T& from, ul& id)
     {
         auto iterpair = key_to_id_.equal_range(from);
         for (auto it = iterpair.first; it != iterpair.second; ++it)
@@ -191,7 +191,7 @@ private:
         }
     }
 
-    void decrease_(T to, ul id)
+    void decrease_(T& to, ul& id)
     {
       id_to_handles_[id]->key_ = to;
       heap_.decrease(id_to_handles_[id]);
